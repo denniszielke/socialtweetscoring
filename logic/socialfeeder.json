@@ -1,0 +1,124 @@
+{
+    "$connections": {
+        "value": {
+            "azureblob": {
+                "connectionId": "/subscriptions/60af0d5d-d842-4e9f-9fd5-44137d39e334/resourceGroups/social/providers/Microsoft.Web/connections/azureblob",
+                "connectionName": "azureblob",
+                "id": "/subscriptions/60af0d5d-d842-4e9f-9fd5-44137d39e334/providers/Microsoft.Web/locations/northcentralus/managedApis/azureblob"
+            },
+            "twitter": {
+                "connectionId": "/subscriptions/60af0d5d-d842-4e9f-9fd5-44137d39e334/resourceGroups/social/providers/Microsoft.Web/connections/twitter-1",
+                "connectionName": "twitter-1",
+                "id": "/subscriptions/60af0d5d-d842-4e9f-9fd5-44137d39e334/providers/Microsoft.Web/locations/northcentralus/managedApis/twitter"
+            }
+        }
+    },
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Condition": {
+                "actions": {
+                    "HttpDocDbSaver": {
+                        "inputs": {
+                            "body": {
+                                "createdat": "@{triggerBody()?['CreatedAtIso']}",
+                                "followerCount": "@{triggerBody()?['UserDetails']?['FollowersCount']}",
+                                "name": "@{triggerBody()?['UserDetails']?['FullName']}",
+                                "profileUrl": "@{triggerBody()?['UserDetails']?['ProfileImageUrl']}",
+                                "retweetcount": "@{triggerBody()?['RetweetCount']}",
+                                "score": "@{body('HttpTextScore').score}",
+                                "text": "@{triggerBody()?['TweetText']}",
+                                "tweetid": "@{triggerBody()?['TweetId']}",
+                                "userid": "@{triggerBody()?['UserDetails']?['Id']}"
+                            },
+                            "function": {
+                                "id": "/subscriptions/60af0d5d-d842-4e9f-9fd5-44137d39e334/resourceGroups/social/providers/Microsoft.Web/sites/dzsocialfunc/functions/HttpDocDbSaver"
+                            }
+                        },
+                        "runAfter": {},
+                        "type": "Function"
+                    }
+                },
+                "expression": "@greater(body('HttpTextScore')['score'], 0.5)",
+                "runAfter": {
+                    "Create_blob": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "If"
+            },
+            "Create_blob": {
+                "inputs": {
+                    "body": "@triggerBody()?['TweetText']",
+                    "host": {
+                        "api": {
+                            "runtimeUrl": "https://logic-apis-northcentralus.azure-apim.net/apim/azureblob"
+                        },
+                        "connection": {
+                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/datasets/default/files",
+                    "queries": {
+                        "folderPath": "tweets/@{body('HttpTextScore').timestamp}",
+                        "name": "@{triggerBody()?['UserDetails']?['Id']}.txt"
+                    }
+                },
+                "runAfter": {
+                    "HttpTextScore": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "HttpTextScore": {
+                "inputs": {
+                    "body": {
+                        "id": "@{triggerBody()?['TweetId']}",
+                        "text": "@{triggerBody()?['TweetText']}"
+                    },
+                    "function": {
+                        "id": "/subscriptions/60af0d5d-d842-4e9f-9fd5-44137d39e334/resourceGroups/social/providers/Microsoft.Web/sites/dzsocialfunc/functions/HttpTextScore"
+                    },
+                    "method": "POST"
+                },
+                "runAfter": {},
+                "type": "Function"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "When_a_new_tweet_is_posted": {
+                "inputs": {
+                    "host": {
+                        "api": {
+                            "runtimeUrl": "https://logic-apis-northcentralus.azure-apim.net/apim/twitter"
+                        },
+                        "connection": {
+                            "name": "@parameters('$connections')['twitter']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/onnewtweet",
+                    "queries": {
+                        "searchQuery": "#Azure"
+                    }
+                },
+                "recurrence": {
+                    "frequency": "Second",
+                    "interval": 5
+                },
+                "splitOn": "@triggerBody()?.value",
+                "type": "ApiConnection"
+            }
+        }
+    }
+}

@@ -1,0 +1,26 @@
+extends layout
+
+block content
+  h1 #{title}
+  h4 #{refreshDate}
+  br
+
+  table.table.table-striped.table-bordered
+    tr
+      td 
+      td Name
+      td Social points
+      td Tweet score
+      td Text
+    if (typeof tweets === "undefined")
+      tr
+        td No tweets
+    else
+      each tweet in tweets
+        tr
+          td <img src=#{tweet.profileUrl}>
+          td #{tweet.username}
+          td #{tweet.points}
+          td #{tweet.score}
+          td #{tweet.text}
+              

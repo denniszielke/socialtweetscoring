@@ -1,0 +1,14 @@
+{
+  "name": "HttpDocDbSaver",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Azure Functions for storing json to docdb",
+  "author": {
+    "name": "",
+    "email": ""
+  },
+
+  "dependencies": {
+    "request": "2.81.0"
+  }
+}
