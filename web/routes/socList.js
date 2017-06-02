@@ -29,7 +29,7 @@ SocList.prototype = {
       ]
     };
 
-    self.insightsClient.trackEvent('Showing all the good #azure tweets');
+    //self.insightsClient.trackEvent('Showing all the good #azure tweets');
     var startDate = new Date();
 
     self.socDao.find(querySpec, function(err, items) {
@@ -39,7 +39,7 @@ SocList.prototype = {
 
       var endDate = new Date();
       var duration = endDate - startDate;
-      self.insightsClient.trackMetric("Loaded Tweets", duration);
+      self.insightsClient.trackMetric("dashboard-loaded-tweets", duration);
 
       res.render('index', {
         title: 'All the cool Tweets List ',

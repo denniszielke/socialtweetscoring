@@ -5,6 +5,14 @@ block content
   h4 #{refreshDate}
   br
 
+  input(type="text",autocomplete="off", autofocus="autofocus", placeholder="Inser search query", value='#{terms}')#query.search
+
+  ul#facets
+    if (typeof facets != "undefined")
+      each facet in facets
+        li.facet #{facet.value} (#{facet.count})
+  br
+
   table.table.table-striped.table-bordered
     tr
       td 
@@ -25,5 +33,5 @@ block content
           td #{tweet.score}
           td #{tweet.text}
           td #{tweet.location}
-              
-    script(src='/loader.js')
+
+    script(src='/searcher.js')

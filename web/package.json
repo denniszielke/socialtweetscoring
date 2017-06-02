@@ -11,7 +11,9 @@
     "email": ""
   },
   "dependencies": {
+    "applicationinsights": "~0.18.0",
     "async": "^2.1.2",
+    "azure-search": "0.0.13",
     "body-parser": "~1.15.2",
     "cookie-parser": "~1.4.3",
     "debug": "~2.2.0",
@@ -19,7 +21,6 @@
     "express": "~4.14.0",
     "jade": "~1.11.0",
     "morgan": "~1.7.0",
-    "serve-favicon": "~2.3.0",
-    "applicationinsights": "~0.18.0"
+    "serve-favicon": "~2.3.0"
   }
 }

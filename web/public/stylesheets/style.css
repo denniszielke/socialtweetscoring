@@ -15,3 +15,31 @@ a {
   margin-top: 5px;
   border: outset 1px #C8C8C8;
 }
+
+input[type=text] {
+     width: 100%;
+    height: 40px;
+    font-size: 16pt;
+    -webkit-transition: width 0.4s ease-in-out;
+    transition: width 0.4s ease-in-out;
+}
+
+/* When the input field gets focus, change its width to 100% */
+input[type=text]:focus {
+    width: 100%;
+}
+
+ul
+{ 
+  overflow-x:hidden;
+  white-space:nowrap; 
+  height: 2em;
+  width: 100%;
+  margin: 4px;
+} 
+
+li
+{ 
+  display:inline; 
+  margin: 10px;
+}   

@@ -2,6 +2,7 @@
 var DocumentDBClient = require('documentdb').DocumentClient;
 var config = require('./config');
 var SocList = require('./routes/soclist');
+var SearchList = require('./routes/searchlist');
 var SocDao = require('./models/socDao');
 
 var express = require('express');
@@ -30,16 +31,18 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 var insightsClient = appInsights.getClient(config.instrumentationKey);
-insightsClient.trackEvent('Initializing');
+insightsClient.trackEvent('dashboard-initializing');
 
 var docDbClient = new DocumentDBClient(config.host, {
     masterKey: config.authKey
 });
 var socDao = new SocDao(docDbClient, config.databaseId, config.collectionId);
 var socList = new SocList(socDao, insightsClient);
+var searchList = new SearchList(config.searchUrl, config.searchKey, insightsClient);
 socDao.init(function(err) { if(err) throw err; });
 
 app.get('/', socList.showTweets.bind(socList));
+app.get('/search', searchList.searchTweets.bind(searchList));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

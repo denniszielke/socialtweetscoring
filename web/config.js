@@ -1,8 +1,11 @@
 var config = {}
 
-config.host = process.env.ENDPOINT || "[URI for DocumentDB endpoint]";
-config.authKey = process.env.AUTHKEY || "[Master key for DocumentDB]";
+config.host = process.env.ENDPOINT;
+config.authKey = process.env.AUTHKEY;
 config.instrumentationKey = process.env.INSTRUMENTATIONKEY;
+
+config.searchUrl = process.env.SEARCHURL;
+config.searchKey = process.env.SEARCHKEY;
 
 config.databaseId = "social";
 config.collectionId = "tweets";
