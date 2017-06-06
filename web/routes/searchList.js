@@ -1,11 +1,13 @@
 var AzureSearch = require('azure-search');
 var async = require('async');
 
-function SearchList(searchurl, searchkey, insightsClient) {
+function SearchList(searchapp, searchkey, searchindex, insightsClient) {
   this.client = AzureSearch({
-    url: searchurl,
+    url: "https://"+ searchapp +".search.windows.net",
     key: searchkey
   });
+  this.searchIndex = searchindex;
+  this.searchApp = searchapp;
   this.insightsClient = insightsClient;
 }
 
@@ -22,18 +24,19 @@ SearchList.prototype = {
       queryterm = req.query.text;
     }
 
-    self.client.search('cooltweets', {search: queryterm, top: 10, facets: ["location"]}, function(err, results,raw){
+    self.client.search(self.searchIndex, {search: queryterm, top: 10, facets: ["location"]}, function(err, results,raw){
       // optional error, or an array of matching results
         console.log("results for " + queryterm);
         console.log(raw);
+        // randomly select a result to track search events
         if (results && results.length > 0){
             var randomindex = Math.floor((Math.random() * results.length));
             var resultId = results[randomindex].id;
 
             self.insightsClient.trackEvent("Search", {
-              SearchServiceName: "dzsocial",
+              SearchServiceName: self.searchApp,
               SearchId: resultId,
-              IndexName: "cooltweets",
+              IndexName: self.searchIndex,
               QueryTerms: queryterm,
               ResultCount: results.length
             });

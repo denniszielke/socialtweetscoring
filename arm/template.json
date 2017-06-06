@@ -1,0 +1,365 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "deployment_name": {
+            "defaultValue": "dz1",
+            "type": "string"
+        }
+    },
+    "variables": {
+        "databaseAccounts_socialdb_name": "[concat(parameters('deployment_name'), 'socialdb')]",
+        "accounts_textscore_name": "[concat(parameters('deployment_name'), 'textscore')]",
+        "databaseAccounts_socialdb_name_1": "[concat(parameters('deployment_name'), 'socialdb')]",
+        "alertrules_Failure_Anomalies___socialinsights_name": "[concat(parameters('deployment_name'), 'socialinsightsfail')]",
+        "components_socialinsights_name": "[concat(parameters('deployment_name'), 'socialinsights')]",
+        "workflows_socialflow_name": "[concat(parameters('deployment_name'), 'socialflow')]",
+        "storageAccounts_socialfunc_name": "[concat(parameters('deployment_name'), 'socialfunc')]",
+        "storageAccounts_tweets_name": "[concat(parameters('deployment_name'), 'tweets')]",
+        "serverfarms_funcplan_name": "[concat(parameters('deployment_name'), 'funcplan')]",
+        "serverfarms_webplan_name": "[concat(parameters('deployment_name'), 'webplan')]",
+        "sites_socialdashboard_name": "[concat(parameters('deployment_name'), 'socialdashboard')]",
+        "sites_socialfunc_name": "[concat(parameters('deployment_name'), 'socialfunc')]",
+        "config_web_name": "[concat(parameters('deployment_name'), 'socialdashboard/web')]",
+        "config_func_name": "[concat(parameters('deployment_name'), 'socialfunc/web')]",
+        "search_app_name": "[concat(parameters('deployment_name'), 'tweetsearch')]"
+    },
+    "resources": [
+        {
+            "comments": "Generalized from resource:",
+            "type": "Microsoft.CognitiveServices/accounts",
+            "sku": {
+                "name": "S1"
+            },
+            "kind": "TextAnalytics",
+            "name": "[variables('accounts_textscore_name')]",
+            "apiVersion": "2016-02-01-preview",
+            "location": "westus",
+            "scale": null,
+            "properties": {},
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource:.",
+            "type": "Microsoft.DocumentDB/databaseAccounts",
+            "kind": "MongoDB",
+            "name": "[variables('databaseAccounts_socialdb_name_1')]",
+            "apiVersion": "2015-04-08",
+            "location": "North Europe",
+            "tags": {
+                "defaultExperience": "MongoDB"
+            },
+            "scale": null,
+            "properties": {
+                "databaseAccountOfferType": "Standard",
+                "consistencyPolicy": {
+                    "defaultConsistencyLevel": "Session",
+                    "maxIntervalInSeconds": 5,
+                    "maxStalenessPrefix": 100
+                },
+                "name": "[variables('databaseAccounts_socialdb_name')]"
+            },
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource:.",
+            "type": "microsoft.insights/components",
+            "kind": "Node.JS",
+            "name": "[variables('components_socialinsights_name')]",
+            "apiVersion": "2014-04-01",
+            "location": "northeurope",
+            "tags": {},
+            "scale": null,
+            "properties": {
+                "ApplicationId": "[variables('components_socialinsights_name')]"
+            },
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource: ",
+            "type": "Microsoft.Logic/workflows",
+            "name": "[variables('workflows_socialflow_name')]",
+            "apiVersion": "2016-06-01",
+            "location": "northeurope",
+            "scale": null,
+            "properties": {
+                "state": "Disabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "When_a_new_tweet_is_posted": {
+                            "recurrence": {
+                                "frequency": "Second",
+                                "interval": 3
+                            },
+                            "splitOn": "@triggerBody()?.value",
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "api": {
+                                        "runtimeUrl": "https://logic-apis-northeurope.azure-apim.net/apim/twitter"
+                                    },
+                                    "connection": {
+                                        "name": "@parameters('$connections')['twitter']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/onnewtweet",
+                                "queries": {
+                                    "searchQuery": "#Azure"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {},
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', variables('sites_socialfunc_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource:.",
+            "type": "Microsoft.Storage/storageAccounts",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "name": "[variables('storageAccounts_socialfunc_name')]",
+            "apiVersion": "2016-01-01",
+            "location": "northeurope",
+            "tags": {},
+            "scale": null,
+            "properties": {},
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource:.",
+            "type": "Microsoft.Storage/storageAccounts",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "name": "[variables('storageAccounts_tweets_name')]",
+            "apiVersion": "2016-01-01",
+            "location": "northeurope",
+            "tags": {},
+            "scale": null,
+            "properties": {},
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/a22a4b62-3d0a-4c60-95f9-3e8aed74d8a7/resourceGroups/social/providers/Microsoft.Web/serverfarms/NorthEuropePlan'.",
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "Y1",
+                "tier": "Dynamic",
+                "size": "Y1",
+                "family": "Y",
+                "capacity": 0
+            },
+            "kind": "functionapp",
+            "name": "[variables('serverfarms_funcplan_name')]",
+            "apiVersion": "2015-08-01",
+            "location": "North Europe",
+            "scale": null,
+            "properties": {
+                "name": "[variables('serverfarms_funcplan_name')]",
+                "numberOfWorkers": 0
+            },
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource:",
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "D1",
+                "tier": "Shared",
+                "size": "D1",
+                "family": "D",
+                "capacity": 0
+            },
+            "kind": "app",
+            "name": "[variables('serverfarms_webplan_name')]",
+            "apiVersion": "2015-08-01",
+            "location": "North Europe",
+            "scale": null,
+            "properties": {
+                "name": "[variables('serverfarms_webplan_name')]",
+                "numberOfWorkers": 0
+            },
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource: .",
+            "type": "Microsoft.Web/sites",
+            "kind": "app",
+            "name": "[variables('sites_socialdashboard_name')]",
+            "apiVersion": "2015-08-01",
+            "location": "North Europe",
+            "tags": {
+
+            },
+            "scale": null,
+            "properties": {
+                "name": "[variables('sites_socialdashboard_name')]",
+                "hostNames": [
+                    "[concat(variables('sites_socialdashboard_name'),'.azurewebsites.net')]"
+                ],
+                "enabledHostNames": [
+                    "[concat(variables('sites_socialdashboard_name'),'.azurewebsites.net')]",
+                    "[concat(variables('sites_socialdashboard_name'),'.scm.azurewebsites.net')]"
+                ],
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(variables('sites_socialdashboard_name'),'.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    },
+                    {
+                        "name": "[concat(variables('sites_socialdashboard_name'),'.scm.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('serverfarms_webplan_name'))]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "2014-04-01",
+                    "type": "config",
+                    "name": "web",
+                    "dependsOn": [
+                        "[resourceId('microsoft.web/sites/', variables('sites_socialdashboard_name'))]",
+                        "[resourceId('microsoft.insights/components', variables('components_socialinsights_name'))]",
+                        "[resourceId('microsoft.documentDb/databaseAccounts/', variables('databaseAccounts_socialdb_name'))]"
+                    ],
+                    "properties": {
+                        "appSettings": [
+                            {
+                                "Value": "[reference(concat('microsoft.insights/components/', variables('components_socialinsights_name'))).InstrumentationKey]",
+                                "Name": "INSTRUMENTATIONKEY"
+                            },
+                            {
+                                "Value": "6.9.1",
+                                "Name": "WEBSITE_NODE_DEFAULT_VERSION"
+                            },
+                            {
+                                "Value": "[reference(concat('microsoft.documentDb/databaseAccounts/', variables('databaseAccounts_socialdb_name'))).documentEndpoint]",
+                                "Name": "ENDPOINT"
+                            },
+                            {
+                                "Value": "[listKeys(resourceId('microsoft.documentDb/databaseAccounts', variables('databaseAccounts_socialdb_name')), '2015-04-08').primaryMasterKey]",
+                                "Name": "AUTHKEY"
+                            },
+                            {
+                                "Value": "[variables('search_app_name')]",
+                                "Name": "SEARCHAPP"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('serverfarms_webplan_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: .",
+            "type": "Microsoft.Web/sites",
+            "kind": "functionapp",
+            "name": "[variables('sites_socialfunc_name')]",
+            "apiVersion": "2015-08-01",
+            "location": "North Europe",
+            "scale": null,
+            "properties": {
+                "name": "[variables('sites_socialfunc_name')]",
+                "hostNames": [
+                    "[concat(variables('sites_socialfunc_name'),'.azurewebsites.net')]"
+                ],
+                "enabledHostNames": [
+                    "[concat(variables('sites_socialfunc_name'),'.azurewebsites.net')]",
+                    "[concat(variables('sites_socialfunc_name'),'.scm.azurewebsites.net')]"
+                ],
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(variables('sites_socialfunc_name'),'.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    },
+                    {
+                        "name": "[concat(variables('sites_socialfunc_name'),'.scm.azurewebsites.net')]",
+                        "sslState": 0,
+                        "thumbprint": null,
+                        "ipBasedSslState": 0
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('serverfarms_funcplan_name'))]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "2014-04-01",
+                    "type": "config",
+                    "name": "web",
+                    "dependsOn": [
+                        "[resourceId('microsoft.web/sites/', variables('sites_socialfunc_name'))]",
+                        "[resourceId('microsoft.insights/components', variables('components_socialinsights_name'))]",
+                        "[resourceId('microsoft.documentDb/databaseAccounts/', variables('databaseAccounts_socialdb_name'))]"
+                    ],
+                    "properties": {
+                        "appSettings": [
+                            {
+                                "Value": "[reference(concat('microsoft.insights/components/', variables('components_socialinsights_name'))).InstrumentationKey]",
+                                "Name": "INSTRUMENTATIONKEY"
+                            },
+                            {
+                                "Value": "[reference(concat('microsoft.documentDb/databaseAccounts/', variables('databaseAccounts_socialdb_name'))).documentEndpoint]",
+                                "Name": "ENDPOINT"
+                            },
+                            {
+                                "Value": "[listKeys(resourceId('microsoft.documentDb/databaseAccounts', variables('databaseAccounts_socialdb_name')), '2015-04-08').primaryMasterKey]",
+                                "Name": "AUTHKEY"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('serverfarms_funcplan_name'))]"
+            ]
+        },
+        {
+            "apiVersion": "2015-08-19",
+            "name": "[variables('search_app_name')]",
+            "location": "North Europe",
+            "sku": {
+                "name": "basic"
+            },
+            "type": "Microsoft.Search/searchServices",
+            "properties": {
+                "replicaCount": 1,
+                "partitionCount": 1,
+                "hostingMode": "default"
+            }
+        }       
+    ]
+}

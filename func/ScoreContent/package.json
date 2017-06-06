@@ -1,0 +1,15 @@
+{
+  "name": "HttpTextScore",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Azure Functions for analyzing text with cognitive services",
+  "author": {
+    "name": "",
+    "email": ""
+  },
+
+  "dependencies": {
+    "request": "2.81.0",
+    "applicationinsights":"^0.20.1"
+  }
+}

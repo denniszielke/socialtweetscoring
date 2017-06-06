@@ -1,0 +1,24 @@
+{
+  "bindings": [
+    {
+      "webHookType": "genericJson",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "res"
+    },
+    {
+      "type": "documentDB",
+      "name": "outputDocument",
+      "databaseName": "tweets",
+      "collectionName": "social",
+      "createIfNotExists": false,
+      "connection": "dzsocialdb_DOCUMENTDB",
+      "direction": "out"
+    }
+  ]
+}

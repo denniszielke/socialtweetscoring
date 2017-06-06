@@ -1,0 +1,15 @@
+{
+  "name": "storecontent",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Azure Functions for storing content to cosmos db",
+  "author": {
+    "name": "",
+    "email": ""
+  },
+
+  "dependencies": {
+    "request": "2.81.0",
+    "applicationinsights":"^0.20.1"
+  }
+}

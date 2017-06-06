@@ -38,7 +38,7 @@ var docDbClient = new DocumentDBClient(config.host, {
 });
 var socDao = new SocDao(docDbClient, config.databaseId, config.collectionId);
 var socList = new SocList(socDao, insightsClient);
-var searchList = new SearchList(config.searchUrl, config.searchKey, insightsClient);
+var searchList = new SearchList(config.searchApp, config.searchKey, config.searchIndex, insightsClient);
 socDao.init(function(err) { if(err) throw err; });
 
 app.get('/', socList.showTweets.bind(socList));

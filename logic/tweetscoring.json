@@ -1,0 +1,90 @@
+{
+                        "Condition": {
+                            "actions": {
+                                "StoreContent": {
+                                    "runAfter": {},
+                                    "type": "Function",
+                                    "inputs": {
+                                        "body": {
+                                            "createdat": "@{triggerBody()?['CreatedAtIso']}",
+                                            "followerCount": "@{triggerBody()?['UserDetails']?['FollowersCount']}",
+                                            "location": "@{triggerBody()?['UserDetails']?['Location']}",
+                                            "name": "@{triggerBody()?['UserDetails']?['FullName']}",
+                                            "profileUrl": "@{triggerBody()?['UserDetails']?['ProfileImageUrl']}",
+                                            "retweetcount": "@{triggerBody()?['RetweetCount']}",
+                                            "score": "@{body('ScoreContent')['score']}",
+                                            "text": "@{triggerBody()?['TweetText']}",
+                                            "tweetid": "@{triggerBody()?['TweetId']}",
+                                            "userid": "@{triggerBody()?['UserDetails']?['Id']}"
+                                        },
+                                        "function": {
+                                            "id": "[concat(resourceId('Microsoft.Web/sites', variables('sites_socialfunc_name')), '/functions/StoreContent')]"
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "ScoreContent": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "else": {
+                                "actions": {
+                                    "Create_blob": {
+                                        "runAfter": {},
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "body": "@{body('ScoreContent')}@{triggerBody()?['UserDetails']?['Description']}@{triggerBody()?['UserDetails']?['Location']}@{triggerBody()?['UserDetails']?['FullName']}@{triggerBody()?['TweetText']}@{triggerBody()?['RetweetCount']}@{triggerBody()?['TweetedBy']}",
+                                            "host": {
+                                                "api": {
+                                                    "runtimeUrl": "https://logic-apis-northeurope.azure-apim.net/apim/azureblob"
+                                                },
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "path": "/datasets/default/files",
+                                            "queries": {
+                                                "folderPath": "bad/@{triggerBody()?['UserDetails']?['Id']}",
+                                                "name": "@{body('ScoreContent')['timestamp']}"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "expression": "@greaterOrEquals(body('ScoreContent')['score'], 0.5)",
+                            "type": "If"
+                        },
+                        "FilterContent": {
+                            "runAfter": {},
+                            "type": "Function",
+                            "inputs": {
+                                "body": {
+                                    "text": "@triggerBody()?['TweetText']",
+                                    "user": "@triggerBody()?['TweetedBy']"
+                                },
+                                "function": {
+                                    "id": "[concat(resourceId('Microsoft.Web/sites', variables('sites_socialfunc_name')), '/functions/FilterContent')]"
+                                }
+                            }
+                        },
+                        "ScoreContent": {
+                            "runAfter": {
+                                "FilterContent": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Function",
+                            "inputs": {
+                                "body": {
+                                    "id": "@triggerBody()?['TweetId']",
+                                    "location": "@triggerBody()?['UserDetails']?['Location']",
+                                    "text": "@triggerBody()?['TweetText']"
+                                },
+                                "function": {
+                                    "id": "[concat(resourceId('Microsoft.Web/sites', variables('sites_socialfunc_name')), '/functions/ScoreContent')]"
+                                }
+                            }
+                        }
+                    }

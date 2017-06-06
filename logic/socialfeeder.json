@@ -1,89 +1,92 @@
-{
-    "$connections": {
-        "value": {
-            "azureblob": {
-                "connectionId": "/subscriptions/60af0d5d-d842-4e9f-9fd5-44137d39e334/resourceGroups/social/providers/Microsoft.Web/connections/azureblob",
-                "connectionName": "azureblob",
-                "id": "/subscriptions/60af0d5d-d842-4e9f-9fd5-44137d39e334/providers/Microsoft.Web/locations/northcentralus/managedApis/azureblob"
-            },
-            "twitter": {
-                "connectionId": "/subscriptions/60af0d5d-d842-4e9f-9fd5-44137d39e334/resourceGroups/social/providers/Microsoft.Web/connections/twitter-1",
-                "connectionName": "twitter-1",
-                "id": "/subscriptions/60af0d5d-d842-4e9f-9fd5-44137d39e334/providers/Microsoft.Web/locations/northcentralus/managedApis/twitter"
-            }
-        }
-    },
-    "definition": {
+"definition": {
         "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
         "actions": {
             "Condition": {
                 "actions": {
-                    "HttpDocDbSaver": {
+                    "StoreContent": {
                         "inputs": {
                             "body": {
                                 "createdat": "@{triggerBody()?['CreatedAtIso']}",
                                 "followerCount": "@{triggerBody()?['UserDetails']?['FollowersCount']}",
+                                "location": "@{triggerBody()?['UserDetails']?['Location']}",
                                 "name": "@{triggerBody()?['UserDetails']?['FullName']}",
                                 "profileUrl": "@{triggerBody()?['UserDetails']?['ProfileImageUrl']}",
                                 "retweetcount": "@{triggerBody()?['RetweetCount']}",
-                                "score": "@{body('HttpTextScore').score}",
+                                "score": "@{body('ScoreContent')['score']}",
                                 "text": "@{triggerBody()?['TweetText']}",
                                 "tweetid": "@{triggerBody()?['TweetId']}",
                                 "userid": "@{triggerBody()?['UserDetails']?['Id']}"
                             },
                             "function": {
-                                "id": "/subscriptions/60af0d5d-d842-4e9f-9fd5-44137d39e334/resourceGroups/social/providers/Microsoft.Web/sites/dzsocialfunc/functions/HttpDocDbSaver"
+                                "id": "/subscriptions/a22a4b62-3d0a-4c60-95f9-3e8aed74d8a7/resourceGroups/social/providers/Microsoft.Web/sites/dzsocialfunc/functions/StoreContent"
                             }
                         },
                         "runAfter": {},
                         "type": "Function"
                     }
                 },
-                "expression": "@greater(body('HttpTextScore')['score'], 0.5)",
+                "else": {
+                    "actions": {
+                        "Create_blob": {
+                            "inputs": {
+                                "body": "@{body('ScoreContent')}@{triggerBody()?['UserDetails']?['Description']}@{triggerBody()?['UserDetails']?['Location']}@{triggerBody()?['UserDetails']?['FullName']}@{triggerBody()?['TweetText']}@{triggerBody()?['RetweetCount']}@{triggerBody()?['TweetedBy']}",
+                                "host": {
+                                    "api": {
+                                        "runtimeUrl": "https://logic-apis-northeurope.azure-apim.net/apim/azureblob"
+                                    },
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/datasets/default/files",
+                                "queries": {
+                                    "folderPath": "bad/@{triggerBody()?['UserDetails']?['Id']}",
+                                    "name": "@{body('ScoreContent')['timestamp']}"
+                                }
+                            },
+                            "runAfter": {},
+                            "type": "ApiConnection"
+                        }
+                    }
+                },
+                "expression": "@greaterOrEquals(body('ScoreContent')['score'], 0.5)",
                 "runAfter": {
-                    "Create_blob": [
+                    "ScoreContent": [
                         "Succeeded"
                     ]
                 },
                 "type": "If"
             },
-            "Create_blob": {
+            "FilterContent": {
                 "inputs": {
-                    "body": "@triggerBody()?['TweetText']",
-                    "host": {
-                        "api": {
-                            "runtimeUrl": "https://logic-apis-northcentralus.azure-apim.net/apim/azureblob"
-                        },
-                        "connection": {
-                            "name": "@parameters('$connections')['azureblob']['connectionId']"
-                        }
+                    "body": {
+                        "text": "@triggerBody()?['TweetText']",
+                        "user": "@triggerBody()?['TweetedBy']"
                     },
-                    "method": "post",
-                    "path": "/datasets/default/files",
-                    "queries": {
-                        "folderPath": "tweets/@{body('HttpTextScore').timestamp}",
-                        "name": "@{triggerBody()?['UserDetails']?['Id']}.txt"
+                    "function": {
+                        "id": "/subscriptions/a22a4b62-3d0a-4c60-95f9-3e8aed74d8a7/resourceGroups/social/providers/Microsoft.Web/sites/dzsocialfunc/functions/FilterContent"
+                    }
+                },
+                "runAfter": {},
+                "type": "Function"
+            },
+            "ScoreContent": {
+                "inputs": {
+                    "body": {
+                        "id": "@triggerBody()?['TweetId']",
+                        "location": "@triggerBody()?['UserDetails']?['Location']",
+                        "text": "@triggerBody()?['TweetText']"
+                    },
+                    "function": {
+                        "id": "/subscriptions/a22a4b62-3d0a-4c60-95f9-3e8aed74d8a7/resourceGroups/social/providers/Microsoft.Web/sites/dzsocialfunc/functions/ScoreContent"
                     }
                 },
                 "runAfter": {
-                    "HttpTextScore": [
+                    "FilterContent": [
                         "Succeeded"
                     ]
                 },
-                "type": "ApiConnection"
-            },
-            "HttpTextScore": {
-                "inputs": {
-                    "body": {
-                        "id": "@{triggerBody()?['TweetId']}",
-                        "text": "@{triggerBody()?['TweetText']}"
-                    },
-                    "function": {
-                        "id": "/subscriptions/60af0d5d-d842-4e9f-9fd5-44137d39e334/resourceGroups/social/providers/Microsoft.Web/sites/dzsocialfunc/functions/HttpTextScore"
-                    },
-                    "method": "POST"
-                },
-                "runAfter": {},
                 "type": "Function"
             }
         },
@@ -100,7 +103,7 @@
                 "inputs": {
                     "host": {
                         "api": {
-                            "runtimeUrl": "https://logic-apis-northcentralus.azure-apim.net/apim/twitter"
+                            "runtimeUrl": "https://logic-apis-northeurope.azure-apim.net/apim/twitter"
                         },
                         "connection": {
                             "name": "@parameters('$connections')['twitter']['connectionId']"
@@ -114,11 +117,10 @@
                 },
                 "recurrence": {
                     "frequency": "Second",
-                    "interval": 5
+                    "interval": 3
                 },
                 "splitOn": "@triggerBody()?.value",
                 "type": "ApiConnection"
             }
         }
     }
-}
