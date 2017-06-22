@@ -4,7 +4,17 @@
     "parameters": {
         "deployment_name": {
             "defaultValue": "dz1",
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Short name of the deployment to ensure no name collisions"
+            }
+        },
+        "function_repo_url": {
+            "type": "string",
+            "defaultValue": "https://github.com/denniszielke/socialtweetscoringfunctions.git",
+            "metadata": {
+                "description": "The URL for the GitHub repository that contains the project to deploy."
+            }
         }
     },
     "variables": {
@@ -45,7 +55,7 @@
             "kind": "MongoDB",
             "name": "[variables('databaseAccounts_socialdb_name_1')]",
             "apiVersion": "2015-04-08",
-            "location": "North Europe",
+            "location": "[resourceGroup().location]",
             "tags": {
                 "defaultExperience": "MongoDB"
             },
@@ -80,7 +90,7 @@
             "type": "Microsoft.Logic/workflows",
             "name": "[variables('workflows_socialflow_name')]",
             "apiVersion": "2016-06-01",
-            "location": "northeurope",
+            "location": "[resourceGroup().location]",
             "scale": null,
             "properties": {
                 "state": "Disabled",
@@ -142,7 +152,7 @@
             "kind": "Storage",
             "name": "[variables('storageAccounts_socialfunc_name')]",
             "apiVersion": "2016-01-01",
-            "location": "northeurope",
+            "location": "[resourceGroup().location]",
             "tags": {},
             "scale": null,
             "properties": {},
@@ -158,7 +168,7 @@
             "kind": "Storage",
             "name": "[variables('storageAccounts_tweets_name')]",
             "apiVersion": "2016-01-01",
-            "location": "northeurope",
+            "location": "[resourceGroup().location]",
             "tags": {},
             "scale": null,
             "properties": {},
@@ -177,7 +187,7 @@
             "kind": "functionapp",
             "name": "[variables('serverfarms_funcplan_name')]",
             "apiVersion": "2015-08-01",
-            "location": "North Europe",
+            "location": "[resourceGroup().location]",
             "scale": null,
             "properties": {
                 "name": "[variables('serverfarms_funcplan_name')]",
@@ -198,7 +208,7 @@
             "kind": "app",
             "name": "[variables('serverfarms_webplan_name')]",
             "apiVersion": "2015-08-01",
-            "location": "North Europe",
+            "location": "[resourceGroup().location]",
             "scale": null,
             "properties": {
                 "name": "[variables('serverfarms_webplan_name')]",
@@ -212,7 +222,7 @@
             "kind": "app",
             "name": "[variables('sites_socialdashboard_name')]",
             "apiVersion": "2015-08-01",
-            "location": "North Europe",
+            "location": "[resourceGroup().location]",
             "tags": {
 
             },
@@ -288,7 +298,7 @@
             "kind": "functionapp",
             "name": "[variables('sites_socialfunc_name')]",
             "apiVersion": "2015-08-01",
-            "location": "North Europe",
+            "location": "[resourceGroup().location]",
             "scale": null,
             "properties": {
                 "name": "[variables('sites_socialfunc_name')]",
@@ -323,7 +333,8 @@
                     "dependsOn": [
                         "[resourceId('microsoft.web/sites/', variables('sites_socialfunc_name'))]",
                         "[resourceId('microsoft.insights/components', variables('components_socialinsights_name'))]",
-                        "[resourceId('microsoft.documentDb/databaseAccounts/', variables('databaseAccounts_socialdb_name'))]"
+                        "[resourceId('microsoft.documentDb/databaseAccounts/', variables('databaseAccounts_socialdb_name'))]",
+                        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_socialfunc_name'))]"
                     ],
                     "properties": {
                         "appSettings": [
@@ -332,14 +343,44 @@
                                 "Name": "INSTRUMENTATIONKEY"
                             },
                             {
+                                "Value": "[reference(concat('microsoft.insights/components/', variables('components_socialinsights_name'))).InstrumentationKey]",
+                                "Name": "APPINSIGHTS_INSTRUMENTATIONKEY"
+                            },                            
+                            {
                                 "Value": "[reference(concat('microsoft.documentDb/databaseAccounts/', variables('databaseAccounts_socialdb_name'))).documentEndpoint]",
                                 "Name": "ENDPOINT"
                             },
                             {
                                 "Value": "[listKeys(resourceId('microsoft.documentDb/databaseAccounts', variables('databaseAccounts_socialdb_name')), '2015-04-08').primaryMasterKey]",
                                 "Name": "AUTHKEY"
+                            },
+                            {
+                                "Value": "latest",
+                                "Name": "FUNCTIONS_EXTENSION_VERSION"
+                            },
+                            {
+                                "Value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccounts_socialfunc_name'), ';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_socialfunc_name')), '2015-05-01-preview').key1,';')]",
+                                "Name": "AzureWebJobsStorage"
+                            },
+                            {
+                                "Value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccounts_socialfunc_name'), ';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_socialfunc_name')), '2015-05-01-preview').key1,';')]",
+                                "Name": "AzureWebJobsDashboard"
                             }
                         ]
+                    }
+                },
+                {
+                "apiVersion": "2015-08-01",
+                "name": "web",
+                 "type": "sourcecontrols",
+                 "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('sites_socialfunc_name'))]",
+                        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_socialfunc_name'))]"
+                ],
+                "properties": {
+                    "RepoUrl": "[parameters('function_repo_url')]",
+                    "branch": "master",
+                    "IsManualIntegration": true
                     }
                 }
             ],
@@ -350,7 +391,7 @@
         {
             "apiVersion": "2015-08-19",
             "name": "[variables('search_app_name')]",
-            "location": "North Europe",
+            "location": "[resourceGroup().location]",
             "sku": {
                 "name": "basic"
             },
