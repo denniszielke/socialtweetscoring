@@ -365,6 +365,18 @@
                             {
                                 "Value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccounts_socialfunc_name'), ';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_socialfunc_name')), '2015-05-01-preview').key1,';')]",
                                 "Name": "AzureWebJobsDashboard"
+                            },
+                            {
+                                "Value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccounts_socialfunc_name'), ';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_socialfunc_name')), '2015-05-01-preview').key1,';')]",
+                                "Name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"
+                            },
+                            {
+                                "Value": "[toLower(variables('sites_socialfunc_name'))]",
+                                "Name": "WEBSITE_CONTENTSHARE"
+                            },
+                            {
+                                "Value": "[concat('AccountEndpoint=', reference(concat('microsoft.documentDb/databaseAccounts/', variables('databaseAccounts_socialdb_name'))).documentEndpoint, ';AccountKey=', listKeys(resourceId('microsoft.documentDb/databaseAccounts', variables('databaseAccounts_socialdb_name')), '2015-04-08').primaryMasterKey, ';')]",
+                                "Name": "twsocialdb_DOCUMENTDB"
                             }
                         ]
                     }
@@ -375,7 +387,8 @@
                  "type": "sourcecontrols",
                  "dependsOn": [
                         "[resourceId('Microsoft.Web/Sites', variables('sites_socialfunc_name'))]",
-                        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_socialfunc_name'))]"
+                        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_socialfunc_name'))]",
+                        "[resourceId('microsoft.documentDb/databaseAccounts/', variables('databaseAccounts_socialdb_name'))]"
                 ],
                 "properties": {
                     "RepoUrl": "[parameters('function_repo_url')]",
