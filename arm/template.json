@@ -398,7 +398,8 @@
                 }
             ],
             "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', variables('serverfarms_funcplan_name'))]"
+                "[resourceId('Microsoft.Web/serverfarms', variables('serverfarms_funcplan_name'))]",
+                "[resourceId('microsoft.documentDb/databaseAccounts/', variables('databaseAccounts_socialdb_name'))]"
             ]
         },
         {
