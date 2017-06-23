@@ -15,7 +15,14 @@
             "metadata": {
                 "description": "The URL for the GitHub repository that contains the project to deploy."
             }
-        }
+        },
+        "dashboard_repo_url": {
+            "type": "string",
+            "defaultValue": "https://github.com/denniszielke/socialtweetscoring.git",
+            "metadata": {
+                "description": "The URL for the GitHub repository that contains the project to deploy."
+            }
+        }        
     },
     "variables": {
         "databaseAccounts_socialdb_name": "[concat(parameters('deployment_name'), 'socialdb')]",
@@ -283,8 +290,25 @@
                             {
                                 "Value": "[variables('search_app_name')]",
                                 "Name": "SEARCHAPP"
+                            },
+                            {
+                                "Value": "[listAdminKeys(resourceId('Microsoft.Search/searchServices', variables('search_app_name')), '2015-08-19').PrimaryKey]",
+                                "Name": "SEARCHKEY"
                             }
                         ]
+                    }
+                },
+                {
+                "apiVersion": "2015-08-01",
+                "name": "web",
+                 "type": "sourcecontrols",
+                 "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('sites_socialdashboard_name'))]"
+                ],
+                "properties": {
+                    "RepoUrl": "[parameters('dashboard_repo_url')]",
+                    "branch": "master",
+                    "IsManualIntegration": true
                     }
                 }
             ],
@@ -377,6 +401,14 @@
                             {
                                 "Value": "[concat('AccountEndpoint=', reference(concat('microsoft.documentDb/databaseAccounts/', variables('databaseAccounts_socialdb_name'))).documentEndpoint, ';AccountKey=', listKeys(resourceId('microsoft.documentDb/databaseAccounts', variables('databaseAccounts_socialdb_name')), '2015-04-08').primaryMasterKey, ';')]",
                                 "Name": "twsocialdb_DOCUMENTDB"
+                            },
+                            {
+                                "Value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', variables('accounts_textscore_name')), '2016-02-01-preview').key1]",
+                                "Name": "TEXTSCORE_KEY"
+                            },
+                            {
+                                "Value": "https://westus.api.cognitive.microsoft.com/text/analytics/v2.0",
+                                "Name": "TEXTSCORE_URL"
                             }
                         ]
                     }
@@ -388,7 +420,7 @@
                  "dependsOn": [
                         "[resourceId('Microsoft.Web/Sites', variables('sites_socialfunc_name'))]",
                         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccounts_socialfunc_name'))]",
-                        "[resourceId('microsoft.documentDb/databaseAccounts/', variables('databaseAccounts_socialdb_name'))]"
+                        "[resourceId('microsoft.documentDb/databaseAccounts', variables('databaseAccounts_socialdb_name'))]"
                 ],
                 "properties": {
                     "RepoUrl": "[parameters('function_repo_url')]",

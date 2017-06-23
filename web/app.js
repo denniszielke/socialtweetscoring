@@ -38,11 +38,12 @@ var docDbClient = new DocumentDBClient(config.host, {
 });
 var socDao = new SocDao(docDbClient, config.databaseId, config.collectionId);
 var socList = new SocList(socDao, insightsClient);
-var searchList = new SearchList(config.searchApp, config.searchKey, config.searchIndex, insightsClient);
+var searchList = new SearchList(config.searchApp, config.searchKey, config.searchIndex, config.host, config.authKey, config.databaseId, config.collectionId, insightsClient);
 socDao.init(function(err) { if(err) throw err; });
 
 app.get('/', socList.showTweets.bind(socList));
 app.get('/search', searchList.searchTweets.bind(searchList));
+app.get('/searchinit', searchList.searchInit.bind(searchList));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
