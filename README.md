@@ -25,8 +25,13 @@ It will deploy the following resources
 - App service
 - Application Insights
 - Search service
-- DocumentDb Connection, AppInsights configuration inside the app service and function appsettings
+- Text Analytics Cognitive Service
+- DocumentDb Connection, AppInsights configuration, Cognitive Services access key, Search Admin Keys inside the app service and function appsettings
 - Code from github to the dashboard and the functions
+
+Open issues:
+- Search Indexer fails to deploy 
+- Twitter Connector not possible to deploy
 
 
 ## More information
