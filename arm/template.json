@@ -31,6 +31,7 @@
         "alertrules_Failure_Anomalies___socialinsights_name": "[concat(parameters('deployment_name'), 'socialinsightsfail')]",
         "components_socialinsights_name": "[concat(parameters('deployment_name'), 'socialinsights')]",
         "workflows_socialflow_name": "[concat(parameters('deployment_name'), 'socialflow')]",
+        "workflows_socialtrigger_name": "[concat(parameters('deployment_name'), 'socialtrigger')]",
         "storageAccounts_socialfunc_name": "[concat(parameters('deployment_name'), 'socialfunc')]",
         "storageAccounts_tweets_name": "[concat(parameters('deployment_name'), 'tweets')]",
         "serverfarms_funcplan_name": "[concat(parameters('deployment_name'), 'funcplan')]",
